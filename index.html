@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Man to Arrow Animation with Movement</title>
+    <style>
+        body {
+            background: white;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #anim {
+            position: absolute;
+            width: 100px;
+            height: auto;
+            left: 50px;
+            top: 200px;
+            image-rendering: auto;
+            /* smooth scaling */
+            transform: translateZ(0);
+            /* GPU acceleration */
+            will-change: transform;
+            /* hint browser */
+            filter: blur(0.5px);
+            /* slight blur to soften edges */
+            transition: transform 0.4s ease;
+            transform-origin: top left;
+            transition: width 4s ease;
+        }
+
+        /* class to double video size */
+        #anim.reduce {
+            width: 50px;
+        }
+
+        #controls {
+            position: absolute;
+            top: 300px;
+            left: 50px;
+        }
+
+        button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <video id="anim" preload="auto" playsinline></video>
+
+    <div id="controls">
+        <button onclick="transformToArrow()">Transform to Arrow</button>
+        <button onclick="moveArrow(500, 150)">Move Arrow to (500,150)</button>
+        <button onclick="transformToMan()">Transform back to Man</button>
+    </div>
+
+    <script>
+        const video = document.getElementById('anim');
+        const controlsDiv = document.getElementById('controls');
+
+        // Video sources
+        const manVideo = 'man-arrow.webm';      // Man standing
+        const manToArrowVideo = 'man-arrow.webm';  // Man -> Arrow animation
+        const arrowToManVideo = 'arrow-man.webm';  // Arrow -> Man animation
+
+        // Track current state
+        let state = 'arrow'; // 'man', 'transforming', 'arrow'
+
+        document.addEventListener('DOMContentLoaded', () => {
+            video.src = arrowToManVideo;
+            video.load();
+            video.muted = true;
+            video.pause();
+            transformToMan();
+        });
+        // Function to transform man into arrow
+        function transformToArrow() {
+            if (state !== 'man') return;
+            state = 'transforming';
+            video.src = manToArrowVideo;
+            video.load();
+            video.play();
+
+            // Grow the video
+            video.classList.remove('reduce');
+
+            video.onended = () => {
+                state = 'arrow';
+                // After transformation show arrow frame paused (optional)
+                video.src = arrowToManVideo; // pause on arrow frame
+                video.load();
+                video.pause();
+            };
+        }
+
+        // Function to move arrow to given (x,y)
+        function moveArrow(x, y) {
+            if (state !== 'arrow') {
+                alert("You need to transform to arrow first!");
+                return;
+            }
+            video.style.left = x + 'px';
+            video.style.top = y + 'px';
+        }
+
+        // Function to transform arrow back to man
+        function transformToMan() {
+            if (state !== 'arrow') return;
+            state = 'transforming';
+            video.src = arrowToManVideo;
+            video.load();
+            video.play();
+
+            // Shrink the video back
+            video.classList.add('reduce');
+
+            try {
+            video.onended = () => {
+                state = 'man';
+                video.src = manVideo;
+                video.load();
+                video.pause();
+            };
+            }
+            catch{
+                state = 'man';
+                video.src = manVideo;
+                video.load();
+                video.pause();
+            }
+        }
+        window.addEventListener('load', () => {
+            transformToMan();
+        });
+    </script>
+
+</body>
+
+</html>
